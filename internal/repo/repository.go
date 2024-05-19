@@ -1,4 +1,4 @@
-package odontologo
+package repo
 
 import (
 	"errors"
@@ -8,6 +8,7 @@ import (
 )
 
 type Repository interface {
+	GetAll() ([]domain.Repo, error)
 	GetById(id int) (domain.Repo, error)
 	CreateRepo(repo domain.Repo) (domain.Repo, error)
 	UpdateRepo(id int, repo domain.Repo) (domain.Repo, error)
@@ -22,6 +23,14 @@ func NewRepository(storage storage.RepoStorageInterface) Repository {
 	return &repository{storage}
 }
 
+func (r *repository) GetAll() ([]domain.Repo, error) {
+	repos, err := r.storage.GetAll()
+	if err != nil {
+		return []domain.Repo{}, errors.New("no repos found")
+	}
+	return repos, nil
+}
+
 func (r *repository) GetById(id int) (domain.Repo, error) {
 	repo, err := r.storage.GetById(id)
 	if err != nil {
@@ -33,7 +42,7 @@ func (r *repository) GetById(id int) (domain.Repo, error) {
 func (r *repository) CreateRepo(repo domain.Repo) (domain.Repo, error) {
 	err := r.storage.CreateRepo(repo)
 	if err != nil {
-		return domain.Repo{}, errors.New("Error creating repo")
+		return domain.Repo{}, errors.New("error creating repo")
 	}
 	return repo, nil
 }
@@ -41,7 +50,7 @@ func (r *repository) CreateRepo(repo domain.Repo) (domain.Repo, error) {
 func (r *repository) UpdateRepo(id int, repo domain.Repo) (domain.Repo, error) {
 	err := r.storage.UpdateRepo(repo)
 	if err != nil {
-		return domain.Repo{}, errors.New("Error updating repo")
+		return domain.Repo{}, errors.New("error updating repo")
 	}
 	return repo, nil
 }

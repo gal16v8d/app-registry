@@ -3,6 +3,7 @@ package storage
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/gal16v8d/app-registry.git/internal/domain"
 )
 
@@ -14,6 +15,31 @@ func NewSqlStore(db *sql.DB) RepoStorageInterface {
 	return &sqlStorage{
 		db: db,
 	}
+}
+
+func (s *sqlStorage) GetAll() ([]domain.Repo, error) {
+	var repos []domain.Repo
+	query := "SELECT * FROM repo;"
+	rows, err := s.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var repo domain.Repo
+		err := rows.Scan(&repo.Id, &repo.Name, &repo.MainTech)
+		if err != nil {
+			return nil, err
+		}
+		repos = append(repos, repo)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return repos, nil
 }
 
 func (s *sqlStorage) GetById(id int) (domain.Repo, error) {

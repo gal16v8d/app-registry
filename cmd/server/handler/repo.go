@@ -2,11 +2,12 @@ package handler
 
 import (
 	"errors"
+	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gal16v8d/app-registry.git/internal/domain"
 	"github.com/gal16v8d/app-registry.git/internal/repo"
+	"github.com/gin-gonic/gin"
 )
 
 type repoHandler struct {
@@ -26,21 +27,32 @@ func validateEmptyRepo(repo *domain.Repo) (bool, error) {
 	return true, nil
 }
 
-func (h *repoHandler) GetByID() gin.HandlerFunc {
+func (h *repoHandler) GetAll() gin.HandlerFunc {
 	return func(c *gin.Context) {
-	
+		repos, err := h.s.GetAll()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error retrieving repos"})
+			return
+		}
+		c.JSON(http.StatusOK, repos)
+	}
+}
+
+func (h *repoHandler) GetById() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
 		idParam := c.Param("id")
 		id, err := strconv.Atoi(idParam)
 		if err != nil {
-			c.JSON(400, gin.H{"error": "invalid id"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 			return
 		}
-		repo, err := h.s.GetByID(id)
+		repo, err := h.s.GetById(id)
 		if err != nil {
-			c.JSON(404, gin.H{"error": "repo not found"})
+			c.JSON(http.StatusNotFound, gin.H{"error": "repo not found"})
 			return
 		}
-		c.JSON(200, repo)
+		c.JSON(http.StatusOK, repo)
 	}
 }
 
@@ -49,20 +61,20 @@ func (h *repoHandler) CreateRepo() gin.HandlerFunc {
 		var repo domain.Repo
 		err := ctx.ShouldBindJSON(&repo)
 		if err != nil {
-			ctx.JSON(400, gin.H{"error": "invalid repo"})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid repo"})
 			return
 		}
 		valid, err := validateEmptyRepo(&repo)
 		if !valid {
-			ctx.JSON(400, gin.H{"error": err.Error()})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		r, err := h.s.CreateRepo(repo)
 		if err != nil {
-			ctx.JSON(400, gin.H{"error": err.Error()})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		ctx.JSON(201, r)
+		ctx.JSON(http.StatusCreated, r)
 	}
 }
 
@@ -72,30 +84,30 @@ func (h *repoHandler) UpdateRepo() gin.HandlerFunc {
 		idString := ctx.Param("id")
 		id, err := strconv.Atoi(idString)
 		if err != nil {
-			ctx.JSON(400, gin.H{"error": "invalid id"})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 			return
 		}
 
 		var repo domain.Repo
 		err = ctx.ShouldBindJSON(&repo)
 		if err != nil {
-			ctx.JSON(400, gin.H{"error": "invalid repo"})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid repo"})
 			return
 		}
 
 		valid, err := validateEmptyRepo(&repo)
 		if !valid {
-			ctx.JSON(400, gin.H{"error": err.Error()})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		r, err := h.s.UpdateRepo(id, repo)
 		if err != nil {
-			ctx.JSON(400, gin.H{"error": err.Error()})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		ctx.JSON(200, r)
+		ctx.JSON(http.StatusOK, r)
 	}
 }
 
@@ -104,14 +116,14 @@ func (h *repoHandler) DeleteRepo() gin.HandlerFunc {
 		idParam := ctx.Param("id")
 		id, err := strconv.Atoi(idParam)
 		if err != nil {
-			ctx.JSON(400, gin.H{"error": "invalid id"})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 			return
 		}
 		_, err = h.s.DeleteRepo(id)
 		if err != nil {
-			ctx.JSON(400, gin.H{"error": err.Error()})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		ctx.JSON(204, gin.H{"msg": "repo deleted"})
+		ctx.JSON(http.StatusNoContent, gin.H{"msg": "repo deleted"})
 	}
 }

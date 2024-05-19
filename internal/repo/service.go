@@ -1,10 +1,11 @@
-package odontologo
+package repo
 
 import (
 	"github.com/gal16v8d/app-registry.git/internal/domain"
 )
 
 type Service interface {
+	GetAll() ([]domain.Repo, error)
 	GetById(id int) (domain.Repo, error)
 	CreateRepo(repo domain.Repo) (domain.Repo, error)
 	UpdateRepo(id int, repo domain.Repo) (domain.Repo, error)
@@ -19,17 +20,29 @@ func NewService(r Repository) Service {
 	return &service{r}
 }
 
+// @Summary Get all the stored repos
+// @Description Get all the stored repos
+// @Success 200 {object} domain.Repo
+// @Router /repos [get]
+func (s *service) GetAll() ([]domain.Repo, error) {
+	repos, err := s.r.GetAll()
+	if err != nil {
+		return []domain.Repo{}, err
+	}
+	return repos, nil
+}
+
 // @Summary Get a repo by id
 // @Description Get a repo by id
 // @Param id path int true "repo id"
 // @Success 200 {object} domain.Repo
 // @Router /repos/{id} [get]
 func (s *service) GetById(id int) (domain.Repo, error) {
-	d, err := s.r.GetById(id)
+	repo, err := s.r.GetById(id)
 	if err != nil {
 		return domain.Repo{}, err
 	}
-	return d, nil
+	return repo, nil
 }
 
 // @Summary Create a new repo

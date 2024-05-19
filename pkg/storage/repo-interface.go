@@ -5,6 +5,7 @@ import (
 )
 
 type RepoStorageInterface interface {
+	GetAll() ([]domain.Repo, error)
 	GetById(id int) (domain.Repo, error)
 	CreateRepo(repo domain.Repo) error
 	UpdateRepo(repo domain.Repo) error
