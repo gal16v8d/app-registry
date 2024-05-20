@@ -8,6 +8,7 @@ import (
 
 	"github.com/gal16v8d/app-registry.git/cmd/server/handler"
 	"github.com/gal16v8d/app-registry.git/internal/repo"
+	"github.com/gal16v8d/app-registry.git/pkg/middleware"
 	"github.com/gal16v8d/app-registry.git/pkg/storage"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
@@ -45,6 +46,7 @@ func main() {
 	repoHandler := handler.NewRepoHandler(repoService)
 
 	r := gin.New()
+	r.Use(middleware.AuthMiddleware())
 
 	r.GET("/health", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"status": "Up"}) })
 
